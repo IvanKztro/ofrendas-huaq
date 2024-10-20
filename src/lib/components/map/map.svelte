@@ -60,7 +60,7 @@
         const userDirectionIcon = L.icon({
           iconUrl: 'arrow.png', // Asegúrate de que la imagen sea una flecha apuntando hacia arriba
           iconSize: [30, 30], // Ajusta el tamaño del icono
-          iconAnchor: [20, 20], // Ajusta el punto de anclaje (la parte de la flecha que toca el mapa)
+          iconAnchor: [0, 0], // Ajusta el punto de anclaje (la parte de la flecha que toca el mapa)
         });
 
         // Añadir marcador de ubicación del usuario (flecha)
