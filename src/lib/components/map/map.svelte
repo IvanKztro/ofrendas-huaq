@@ -5,7 +5,7 @@
   import "leaflet-rotatedmarker"; // Asegúrate de que esta librería esté correctamente cargada
 
   let map: any;
-  let userMarker, directionMarker: any;
+  let userMarker: any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
 
@@ -47,17 +47,13 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Inicializar el marcador de dirección
-        directionMarker = L.marker([userCoords.lat, userCoords.lng]).addTo(map).setRotationAngle(userHeading);
-
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
-              directionMarker.setRotationAngle(userHeading); // Rotar la imagen de la flecha según la orientación del dispositivo
 
-              // Crear el cono de luz solo después de que se detecte la orientación
+              // Actualizar el cono de luz con la orientación
               updateLightCone(userCoords.lat, userCoords.lng, userHeading);
             }
           });
@@ -104,6 +100,7 @@
     height: 70vh;
   }
 </style>
+
 
 
 <!-- <script lang="ts">
