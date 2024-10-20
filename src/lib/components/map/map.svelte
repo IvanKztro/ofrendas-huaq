@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import L from "leaflet";
   import "leaflet.markercluster"; // Asegúrate de que esta librería esté correctamente cargada
+  import "leaflet-rotatedmarker"; // Importa la clase para rotar el marcador
 
   let map: any;
   let userMarker: any;
@@ -48,17 +49,15 @@
         // Inicializar el marcador de dirección con la imagen PNG
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: L.icon({
-            iconUrl: 'eyearea.png', // Cambia esto por la ruta a tu imagen PNG
+            iconUrl: 'ruta/a/tu/imagen.png', // Cambia esto por la ruta a tu imagen PNG
             iconSize: [30, 30], // Tamaño del icono
             iconAnchor: [15, 15], // Punto de anclaje del icono
           }),
         }).addTo(map);
 
         // Verifica si hay orientación de dispositivo
-        console.log("sdd")
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
-              console.log(event)
             if (event.alpha) {
               userHeading = event.alpha;
 
@@ -81,7 +80,6 @@
     height: 70vh;
   }
 </style>
-
 
 
 
