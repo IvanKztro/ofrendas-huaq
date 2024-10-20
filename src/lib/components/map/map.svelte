@@ -49,6 +49,7 @@
 
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
+          // Listener para eventos de orientación del dispositivo
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
@@ -61,7 +62,7 @@
                 updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
               }
             }
-          }, { once: true }); // Se asegura de que solo se ejecute una vez para obtener la dirección inicial
+          });
         }
       });
     }
@@ -106,6 +107,7 @@
     height: 70vh;
   }
 </style>
+
 
 
 
