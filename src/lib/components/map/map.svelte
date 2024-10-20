@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
-  import "leaflet.markercluster";
-  import "leaflet-rotatedmarker"; // Asegúrate de que esta librería esté correctamente cargada
+  import "leaflet.markercluster"; // Asegúrate de que esta librería esté correctamente cargada
 
   let map: any;
   let userMarker: any;
+  let directionMarker: any; // Marcador de dirección
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
 
@@ -16,8 +16,6 @@
     { nombre: "Lugar 4", descripcion: "Este es el lugar 4.", lat: 18.771912, lng: -98.543291 },
     { nombre: "Lugar 5", descripcion: "Este es el lugar 5.", lat: 18.772281, lng: -98.545231 },
   ];
-
-  let lightCone: any; // Variable para el cono de luz
 
   onMount(() => {
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
@@ -47,48 +45,31 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
+        // Inicializar el marcador de dirección con la imagen PNG
+        directionMarker = L.marker([userCoords.lat, userCoords.lng], {
+          icon: L.icon({
+            iconUrl: 'eyearea.png', // Cambia esto por la ruta a tu imagen PNG
+            iconSize: [30, 30], // Tamaño del icono
+            iconAnchor: [15, 15], // Punto de anclaje del icono
+          }),
+        }).addTo(map);
+
         // Verifica si hay orientación de dispositivo
+        console.log("sdd")
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
+              console.log(event)
             if (event.alpha) {
               userHeading = event.alpha;
 
-              // Actualizar el cono de luz con la orientación
-              updateLightCone(userCoords.lat, userCoords.lng, userHeading);
+              // Rotar el marcador de dirección según la orientación
+              directionMarker.setRotationAngle(userHeading); 
             }
           });
         }
       });
     }
   });
-
-  function createLightCone(lat: number, lng: number, heading: number) {
-    const coneLength = 10; // Longitud del cono (ajustado para ser más corto)
-    const coneWidth = 10; // Ancho del cono (ajustado para ser igual al círculo)
-
-    // Calcular las coordenadas de los vértices del cono
-    const point1 = L.latLng(lat, lng);
-    const point2 = L.latLng(lat + (coneLength * Math.sin(heading * (Math.PI / 180))), lng + (coneLength * Math.cos(heading * (Math.PI / 180))));
-    const point3 = L.latLng(lat + (coneWidth * Math.sin((heading + 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading + 45) * (Math.PI / 180))));
-    const point4 = L.latLng(lat + (coneWidth * Math.sin((heading - 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading - 45) * (Math.PI / 180))));
-
-    const coneLatLngs = [point1, point2, point3, point2, point4];
-
-    lightCone = L.polygon(coneLatLngs, {
-      color: "#3388ff", // Color azul
-      fillColor: "#3388ff", // Color azul con opacidad
-      fillOpacity: 0.2, // Opacidad del relleno
-    }).addTo(map);
-  }
-
-  function updateLightCone(lat: number, lng: number, heading: number) {
-    // Eliminar el cono de luz anterior
-    if (lightCone) {
-      map.removeLayer(lightCone);
-    }
-    // Crear un nuevo cono de luz
-    createLightCone(lat, lng, heading);
-  }
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
@@ -100,6 +81,7 @@
     height: 70vh;
   }
 </style>
+
 
 
 
