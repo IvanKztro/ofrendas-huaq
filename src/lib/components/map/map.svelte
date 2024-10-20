@@ -14,7 +14,7 @@
   // Generar lugares aleatorios cerca de la ubicación del usuario
   function generateRandomPlaces(lat: number, lng: number, count: number) {
     const places = [];
-    const quarterKm = 0.0055; // Aproximadamente 1/4 de kilómetro en grados
+    const quarterKm = 0.0025; // Aproximadamente 1/4 de kilómetro en grados
     for (let i = 0; i < count; i++) {
       const randomLat = lat + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en latitud
       const randomLng = lng + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en longitud
@@ -29,21 +29,18 @@
   }
 
   onMount(() => {
-    // Mostrar mapa con vista predeterminada
-    map = L.map("map").setView([18.770748, -98.542181], 15.55);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-    }).addTo(map);
-
     // Esperar a que se obtenga la ubicación del usuario
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         userCoords.lat = position.coords.latitude;
         userCoords.lng = position.coords.longitude;
 
-        // Establecer la vista del mapa en la ubicación del usuario
-        map.setView([userCoords.lat, userCoords.lng], 15.55);
+        // Mostrar mapa en la ubicación del usuario
+        map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
 
         // Añadir marcador de ubicación del usuario (círculo azul)
         userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
@@ -126,6 +123,7 @@
     height: 70vh;
   }
 </style>
+
 
 
 
