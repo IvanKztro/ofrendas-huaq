@@ -1,19 +1,20 @@
+
 <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
+  import "leaflet.markercluster";
   import "leaflet-rotatedmarker";
 
   let map: any;
-  let userMarker, directionMarker;
+  let userMarker, directionMarker: any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
-  let initialHeading = null;
 
+  // Lista de lugares con coordenadas y descripción
   const lugares = [
     { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
     { nombre: "Lugar 2", descripcion: "Este es el lugar 2.", lat: 18.7709122, lng: -98.5431473 },
-    { nombre: "Lugar 3", descripcion: "Este es el lugar 3.", lat: 18.770548, lng: -98.542081 },
-    // ... demás lugares
+    // More places...
   ];
 
   onMount(() => {
@@ -37,7 +38,7 @@
         userCoords.lat = position.coords.latitude;
         userCoords.lng = position.coords.longitude;
 
-        // Añadir marcador personalizado con un círculo
+        // Añadir marcador de ubicación del usuario (círculo azul)
         userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
           color: "#3388ff",
           fillColor: "#3388ff",
@@ -47,34 +48,32 @@
 
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Crear marcador de orientación (flecha)
-        const userDirectionIcon = L.icon({
-          iconUrl: "/arrow.png",
+        // Crear ícono personalizado para la orientación (flecha)
+        const userDirectionIcon = L.divIcon({
+          className: "direction-icon", // clase CSS personalizada para la flecha
           iconSize: [40, 40],
           iconAnchor: [20, 20],
+          html: '<div class="arrow"></div>', // flecha con CSS
         });
 
+        // Añadir marcador de orientación (flecha)
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userDirectionIcon,
-          rotationAngle: userHeading,
-          rotationOrigin: "center",
         }).addTo(map);
       });
 
-      // Detectar orientación del dispositivo
+      // Detectar la orientación del dispositivo
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", (event) => {
           if (event.alpha) {
-            // Establecer el valor inicial de la orientación si no está definido
-            if (initialHeading === null) {
-              initialHeading = event.alpha;
-            }
-            
-            // Calcular el ángulo de rotación relativo al norte
-            userHeading = event.alpha - initialHeading;
-            
+            userHeading = event.alpha;
             if (directionMarker) {
-              directionMarker.setRotationAngle(userHeading);
+              // Actualiza la rotación de la flecha según la orientación del dispositivo
+              const rotation = `rotate(${userHeading}deg)`;
+              const arrowElement = document.querySelector(".arrow") as HTMLElement;
+              if (arrowElement) {
+                arrowElement.style.transform = rotation;
+              }
             }
           }
         });
@@ -83,28 +82,40 @@
   });
 </script>
 
-<svelte:head>
-  <title>Mapa con Lugares y Orientación</title>
-  <meta name="description" content="Mapa con marcas y ubicación del usuario" />
-</svelte:head>
+<h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
 
 <div id="map"></div>
 
 <style>
   #map {
-    height: 100vh;
+    height: 70vh;
+  }
+
+  .direction-icon .arrow {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 20px solid #3388ff; /* Color de la flecha */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: 50% 100%; /* Rotación desde el centro */
+    transform: rotate(0deg); /* Inicialmente sin rotación */
   }
 </style>
 
 
-<!-- <script lang="ts">
+<!-- 
+
+<script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
   import "leaflet.markercluster";
   import "leaflet-rotatedmarker";
 
   let map: any;
-  let userMarker, directionMarker;
+  let userMarker, directionMarker:any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
 
@@ -185,7 +196,7 @@
   ];
 
   onMount(() => {
-    // Inicializa el mapa
+    // Inicializa el mapa centrado en coordenadas iniciales
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
 
     // Añade las capas de OpenStreetMap
@@ -193,18 +204,11 @@
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Crea el grupo de clusters
-    // const markerCluster = L.markerClusterGroup();
-
     // Muestra las marcas de los lugares
     lugares.forEach((lugar) => {
       const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
       marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-      //   marker.addLayer(marker);
     });
-
-    // Añade el grupo de clusters al mapa
-    // map.addLayer(markerCluster);
 
     // Solicitar la ubicación del usuario
     if (navigator.geolocation) {
@@ -212,7 +216,7 @@
         userCoords.lat = position.coords.latitude;
         userCoords.lng = position.coords.longitude;
 
-        // Añadir marcador personalizado con un círculo
+        // Añadir marcador de ubicación del usuario (círculo azul)
         userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
           color: "#3388ff",
           fillColor: "#3388ff",
@@ -222,27 +226,29 @@
 
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Crear marcador de orientación (flecha)
-        const userDirectionIcon = L.icon({
-          iconUrl: "/arrow.png",
+        // Crear ícono personalizado para la orientación (flecha)
+        const userDirectionIcon = L.divIcon({
+          className: "direction-icon", // clase CSS personalizada para la flecha
           iconSize: [40, 40],
           iconAnchor: [20, 20],
+          html: '<div class="arrow"></div>', // flecha con CSS
         });
 
+        // Añadir marcador de orientación (flecha)
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userDirectionIcon,
-          rotationAngle: userHeading,
-          rotationOrigin: "center",
         }).addTo(map);
       });
 
-      // Detectar orientación del dispositivo
+      // Detectar la orientación del dispositivo
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", (event) => {
           if (event.alpha) {
             userHeading = event.alpha;
             if (directionMarker) {
-              directionMarker.setRotationAngle(userHeading);
+              // Actualiza la rotación de la flecha según la orientación del dispositivo
+              const rotation = `rotate(${userHeading}deg)`;
+              document.querySelector(".arrow").style.transform = rotation;
             }
           }
         });
@@ -259,4 +265,17 @@
   #map {
     height: 70vh;
   }
+
+  .direction-icon .arrow {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 20px solid #3388ff; /* Color de la flecha */
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 50% 50%; /* Centro de rotación */
+  transform: rotate(0deg); /* Inicialmente sin rotación */
+}
 </style> -->
