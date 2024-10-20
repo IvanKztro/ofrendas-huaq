@@ -115,8 +115,8 @@
 
         // Añadir marcador personalizado con un círculo
         userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-          color: "#3388ff",
-          fillColor: "#3388ff",
+          color: "transparent",
+          fillColor: "transparent",
           fillOpacity: 0.5,
           radius: 10,
         }).addTo(map);
@@ -125,9 +125,9 @@
 
         // Crear marcador de orientación (flecha)
         const userDirectionIcon = L.icon({
-          iconUrl: "path_to_arrow_icon.png",
-          iconSize: [40, 40],
-          iconAnchor: [20, 20],
+          iconUrl: "/arrow.png",
+          iconSize: [30, 30],
+          iconAnchor: [15, 20],
         });
 
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
