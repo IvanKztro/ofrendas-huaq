@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
@@ -10,29 +9,24 @@
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
 
-  // Lista de lugares con coordenadas y descripción
   const lugares = [
     { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
     { nombre: "Lugar 2", descripcion: "Este es el lugar 2.", lat: 18.7709122, lng: -98.5431473 },
-    // More places...
+    // Otros lugares...
   ];
 
   onMount(() => {
-    // Inicializa el mapa
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
 
-    // Añade las capas de OpenStreetMap
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Muestra las marcas de los lugares
     lugares.forEach((lugar) => {
       const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
       marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
     });
 
-    // Solicitar la ubicación del usuario
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         userCoords.lat = position.coords.latitude;
@@ -50,10 +44,10 @@
 
         // Crear ícono personalizado para la orientación (flecha)
         const userDirectionIcon = L.divIcon({
-          className: "direction-icon", // clase CSS personalizada para la flecha
+          className: "direction-icon",
           iconSize: [40, 40],
           iconAnchor: [20, 20],
-          html: '<div class="arrow"></div>', // flecha con CSS
+          html: '<div class="arrow"></div>', // HTML para la flecha
         });
 
         // Añadir marcador de orientación (flecha)
@@ -62,17 +56,15 @@
         }).addTo(map);
       });
 
-      // Detectar la orientación del dispositivo
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", (event) => {
           if (event.alpha) {
             userHeading = event.alpha;
             if (directionMarker) {
-              // Actualiza la rotación de la flecha según la orientación del dispositivo
-              const rotation = `rotate(${userHeading}deg)`;
               const arrowElement = document.querySelector(".arrow") as HTMLElement;
               if (arrowElement) {
-                arrowElement.style.transform = rotation;
+                // Aplica la rotación
+                arrowElement.style.transform = `rotate(${userHeading}deg)`;
               }
             }
           }
@@ -91,7 +83,7 @@
     height: 70vh;
   }
 
-  .direction-icon .arrow {
+  .arrow {
     width: 0;
     height: 0;
     border-left: 10px solid transparent;
@@ -100,8 +92,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform-origin: 50% 100%; /* Rotación desde el centro */
-    transform: rotate(0deg); /* Inicialmente sin rotación */
+    transform-origin: 50% 100%; /* Rotar desde la base */
+    transform: rotate(0deg); /* Sin rotación inicial */
   }
 </style>
 
