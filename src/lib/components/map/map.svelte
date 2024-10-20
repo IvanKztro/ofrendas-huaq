@@ -46,20 +46,15 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
+        // Crear el cono de dirección
+        createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
-              userHeading = event.alpha; // Guardar el ángulo de orientación
+              userHeading = event.alpha;
               updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
-            }
-          });
-
-          // También queremos inicializar la dirección del cono de dirección en la primera orientación
-          window.addEventListener("deviceorientation", (event) => {
-            if (event.alpha) {
-              userHeading = event.alpha; // Obtener la dirección inicial
-              createDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Crear el cono de dirección
             }
           });
         }
