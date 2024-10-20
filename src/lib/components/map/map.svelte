@@ -50,16 +50,15 @@
         // Inicializar el marcador de dirección
         directionMarker = L.marker([userCoords.lat, userCoords.lng]).addTo(map).setRotationAngle(userHeading);
 
-        // Crear el cono de luz inicial
-        updateLightCone(userCoords.lat, userCoords.lng, userHeading);
-
-        // Añadir evento de orientación
+        // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
               directionMarker.setRotationAngle(userHeading); // Rotar la imagen de la flecha según la orientación del dispositivo
-              updateLightCone(userCoords.lat, userCoords.lng, userHeading); // Actualizar el cono de luz
+
+              // Crear el cono de luz solo después de que se detecte la orientación
+              updateLightCone(userCoords.lat, userCoords.lng, userHeading);
             }
           });
         }
@@ -105,6 +104,7 @@
     height: 70vh;
   }
 </style>
+
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
