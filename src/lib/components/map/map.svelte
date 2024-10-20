@@ -5,7 +5,8 @@
   import "leaflet-rotatedmarker";
 
   let map: any;
-  let userMarker, directionMarker: any;
+  let userMarker: any; // Cambiar a marker
+  let directionMarker: any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
   let loading = true; // Estado de carga
@@ -50,31 +51,33 @@
         // Ocultar el indicador de carga cuando la ubicación se obtiene
         loading = false;
 
-        // Añadir marcador de ubicación del usuario (círculo azul)
-        userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-          color: "#3388ff",
-          fillColor: "#3388ff",
-          fillOpacity: 0.5,
-          radius: 10,
-        }).addTo(map);
-
         // Cargar las capas de mapa
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap contributors",
         }).addTo(map);
 
-        // Crear ícono personalizado con una imagen de flecha
+        // Crear ícono personalizado con una imagen de flecha apuntando hacia arriba
         const userDirectionIcon = L.icon({
-          iconUrl: 'eyearea.png',
-          iconSize: [20, 20],
-          iconAnchor: [20, 20],
+          iconUrl: 'arrow.png', // Asegúrate de que la imagen sea una flecha apuntando hacia arriba
+          iconSize: [30, 30], // Ajusta el tamaño del icono
+          iconAnchor: [20, 20], // Ajusta el punto de anclaje (la parte de la flecha que toca el mapa)
         });
 
-        // Añadir marcador de orientación (flecha)
-        directionMarker = L.marker([userCoords.lat, userCoords.lng], {
+        // Añadir marcador de ubicación del usuario (flecha)
+        userMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userDirectionIcon,
-          rotationAngle: 0,
+          rotationAngle: userHeading, // Inicia con la dirección del usuario
         }).addTo(map);
+
+        // Actualizar el marcador en función de la dirección del usuario
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (event) => {
+            if (event.alpha) {
+              userHeading = event.alpha; // Obtener la orientación del dispositivo
+              userMarker.setRotationAngle(userHeading); // Rotar el marcador de ubicación
+            }
+          });
+        }
 
         // Generar 7 ubicaciones aleatorias dentro de un radio de 1 km alrededor de la ubicación del usuario
         const randomLocations = generateRandomLocations(userCoords.lat, userCoords.lng, 7, 1);
@@ -85,17 +88,6 @@
           marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
         });
       });
-
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener("deviceorientation", (event) => {
-          if (event.alpha) {
-            userHeading = event.alpha;
-            if (directionMarker) {
-              directionMarker.setRotationAngle(userHeading);
-            }
-          }
-        });
-      }
     }
   });
 </script>
@@ -110,7 +102,7 @@
 {/if}
 
 <!-- Mapa -->
-<div id="map" ></div>
+<div id="map"></div>
 
 <style>
   #map {
