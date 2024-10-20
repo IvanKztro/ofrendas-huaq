@@ -9,6 +9,7 @@
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
   let directionCone: any; // Variable para el cono de dirección
+  let coneInitialized = false; // Flag para verificar si el cono ya ha sido inicializado
 
   const lugares = [
     { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
@@ -46,17 +47,21 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Crear el cono de dirección
-        createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
-
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
-              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
+
+              // Inicializar el cono de dirección solo si no ha sido inicializado
+              if (!coneInitialized) {
+                createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+                coneInitialized = true; // Marcar como inicializado
+              } else {
+                updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
+              }
             }
-          });
+          }, { once: true }); // Se asegura de que solo se ejecute una vez para obtener la dirección inicial
         }
       });
     }
