@@ -17,6 +17,8 @@
     { nombre: "Lugar 5", descripcion: "Este es el lugar 5.", lat: 18.772281, lng: -98.545231 },
   ];
 
+  let lightCone: any; // Variable para el cono de luz
+
   onMount(() => {
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
 
@@ -42,14 +44,6 @@
           radius: 10,
         }).addTo(map);
 
-        // Crear un círculo de luz que emanará del marcador de usuario
-        const lightCircle = L.circle([userCoords.lat, userCoords.lng], {
-          color: "rgba(255, 255, 0, 0.4)", // Color amarillo con opacidad
-          fillColor: "rgba(255, 255, 0, 0.2)", // Color amarillo con opacidad
-          fillOpacity: 0.5,
-          radius: 100, // Puedes ajustar el tamaño de la "luz"
-        }).addTo(map);
-
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
@@ -66,12 +60,8 @@
           rotationAngle: 0, // Inicialmente sin rotación
         }).addTo(map);
 
-        // Actualizar la posición del círculo de luz y el marcador de dirección
-        const updateMarkerAndLightCircle = () => {
-          userMarker.setLatLng([userCoords.lat, userCoords.lng]);
-          lightCircle.setLatLng([userCoords.lat, userCoords.lng]);
-          directionMarker.setLatLng([userCoords.lat, userCoords.lng]);
-        };
+        // Crear un cono de luz inicial
+        createLightCone(userCoords.lat, userCoords.lng, 0);
 
         // Detectar cambios de orientación del dispositivo
         if (window.DeviceOrientationEvent) {
@@ -79,13 +69,41 @@
             if (event.alpha) {
               userHeading = event.alpha;
               directionMarker.setRotationAngle(userHeading); // Rotar la imagen de la flecha según la orientación del dispositivo
-              updateMarkerAndLightCircle(); // Actualizar posición
+              updateLightCone(userCoords.lat, userCoords.lng, userHeading); // Actualizar el cono de luz
             }
           });
         }
       });
     }
   });
+
+  function createLightCone(lat: number, lng: number, heading: number) {
+    const coneLength = 100; // Longitud del cono
+    const coneWidth = 30; // Ancho del cono
+
+    // Calcular las coordenadas de los vértices del cono
+    const point1 = L.latLng(lat, lng);
+    const point2 = L.latLng(lat + (coneLength * Math.sin(heading * (Math.PI / 180))), lng + (coneLength * Math.cos(heading * (Math.PI / 180))));
+    const point3 = L.latLng(lat + (coneWidth * Math.sin((heading + 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading + 45) * (Math.PI / 180))));
+    const point4 = L.latLng(lat + (coneWidth * Math.sin((heading - 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading - 45) * (Math.PI / 180))));
+
+    const coneLatLngs = [point1, point2, point3, point2, point4];
+
+    lightCone = L.polygon(coneLatLngs, {
+      color: "rgba(255, 255, 0, 0.5)", // Color amarillo
+      fillColor: "rgba(255, 255, 0, 0.2)", // Color amarillo con opacidad
+      fillOpacity: 0.5,
+    }).addTo(map);
+  }
+
+  function updateLightCone(lat: number, lng: number, heading: number) {
+    // Eliminar el cono de luz anterior
+    if (lightCone) {
+      map.removeLayer(lightCone);
+    }
+    // Crear un nuevo cono de luz
+    createLightCone(lat, lng, heading);
+  }
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
@@ -97,7 +115,6 @@
     height: 70vh;
   }
 </style>
-
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
