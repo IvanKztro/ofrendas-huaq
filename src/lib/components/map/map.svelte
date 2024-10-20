@@ -9,7 +9,6 @@
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
   let directionCone: any; // Variable para el cono de dirección
-  let coneInitialized = false; // Flag para verificar si el cono ya ha sido inicializado
 
   const lugares = [
     { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
@@ -47,20 +46,15 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
+        // Crear el cono de dirección
+        createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
-          // Listener para eventos de orientación del dispositivo
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
-
-              // Inicializar el cono de dirección solo si no ha sido inicializado
-              if (!coneInitialized) {
-                createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
-                coneInitialized = true; // Marcar como inicializado
-              } else {
-                updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
-              }
+              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
             }
           });
         }
@@ -69,8 +63,8 @@
   });
 
   function createDirectionCone(lat: number, lng: number, heading: number) {
-    const coneLength = 0.0005; // Longitud del cono (en grados, aproximadamente 50 px)
-    const coneWidth = 0.0002; // Ancho del cono
+    const coneLength = 10; // Longitud del cono
+    const coneWidth = 6; // Ancho del cono
 
     // Calcular las coordenadas de los vértices del cono
     const point1 = L.latLng(lat, lng); // Punto de inicio (posición del usuario)
@@ -107,7 +101,6 @@
     height: 70vh;
   }
 </style>
-
 
 
 
