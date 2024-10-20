@@ -1,6 +1,105 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
+  import "leaflet-rotatedmarker";
+
+  let map: any;
+  let userMarker, directionMarker;
+  let userCoords = { lat: 0, lng: 0 };
+  let userHeading = 0;
+  let initialHeading = null;
+
+  const lugares = [
+    { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
+    { nombre: "Lugar 2", descripcion: "Este es el lugar 2.", lat: 18.7709122, lng: -98.5431473 },
+    { nombre: "Lugar 3", descripcion: "Este es el lugar 3.", lat: 18.770548, lng: -98.542081 },
+    // ... demás lugares
+  ];
+
+  onMount(() => {
+    // Inicializa el mapa
+    map = L.map("map").setView([18.770748, -98.542181], 15.55);
+
+    // Añade las capas de OpenStreetMap
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    // Muestra las marcas de los lugares
+    lugares.forEach((lugar) => {
+      const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+      marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+    });
+
+    // Solicitar la ubicación del usuario
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        userCoords.lat = position.coords.latitude;
+        userCoords.lng = position.coords.longitude;
+
+        // Añadir marcador personalizado con un círculo
+        userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
+          color: "#3388ff",
+          fillColor: "#3388ff",
+          fillOpacity: 0.5,
+          radius: 10,
+        }).addTo(map);
+
+        map.setView([userCoords.lat, userCoords.lng], 15.55);
+
+        // Crear marcador de orientación (flecha)
+        const userDirectionIcon = L.icon({
+          iconUrl: "/arrow.png",
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+        });
+
+        directionMarker = L.marker([userCoords.lat, userCoords.lng], {
+          icon: userDirectionIcon,
+          rotationAngle: userHeading,
+          rotationOrigin: "center",
+        }).addTo(map);
+      });
+
+      // Detectar orientación del dispositivo
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener("deviceorientation", (event) => {
+          if (event.alpha) {
+            // Establecer el valor inicial de la orientación si no está definido
+            if (initialHeading === null) {
+              initialHeading = event.alpha;
+            }
+            
+            // Calcular el ángulo de rotación relativo al norte
+            userHeading = event.alpha - initialHeading;
+            
+            if (directionMarker) {
+              directionMarker.setRotationAngle(userHeading);
+            }
+          }
+        });
+      }
+    }
+  });
+</script>
+
+<svelte:head>
+  <title>Mapa con Lugares y Orientación</title>
+  <meta name="description" content="Mapa con marcas y ubicación del usuario" />
+</svelte:head>
+
+<div id="map"></div>
+
+<style>
+  #map {
+    height: 100vh;
+  }
+</style>
+
+
+<!-- <script lang="ts">
+  import { onMount } from "svelte";
+  import L from "leaflet";
   import "leaflet.markercluster";
   import "leaflet-rotatedmarker";
 
@@ -160,4 +259,4 @@
   #map {
     height: 70vh;
   }
-</style>
+</style> -->
