@@ -2,13 +2,13 @@
   import { onMount } from "svelte";
   import L from "leaflet";
   import "leaflet.markercluster"; // Asegúrate de que esta librería esté correctamente cargada
-  import "leaflet-rotatedmarker"; // Importa la clase para rotar el marcador
+  import "leaflet-rotatedmarker"; // Importa la clase para rotar el marcador (si lo necesitas para otras partes)
 
   let map: any;
   let userMarker: any;
-  let directionMarker: any; // Marcador de dirección
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
+  let directionCone: any; // Variable para el cono de dirección
 
   const lugares = [
     { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
@@ -46,29 +46,50 @@
         // Establecer la vista del mapa en la ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Inicializar el marcador de dirección con la imagen PNG
-        directionMarker = L.marker([userCoords.lat, userCoords.lng], {
-          icon: L.icon({
-            iconUrl: 'ruta/a/tu/imagen.png', // Cambia esto por la ruta a tu imagen PNG
-            iconSize: [30, 30], // Tamaño del icono
-            iconAnchor: [15, 15], // Punto de anclaje del icono
-          }),
-        }).addTo(map);
+        // Crear el cono de dirección
+        createDirectionCone(userCoords.lat, userCoords.lng, userHeading);
 
         // Verifica si hay orientación de dispositivo
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (event) => {
             if (event.alpha) {
               userHeading = event.alpha;
-
-              // Rotar el marcador de dirección según la orientación
-              directionMarker.setRotationAngle(userHeading); 
+              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
             }
           });
         }
       });
     }
   });
+
+  function createDirectionCone(lat: number, lng: number, heading: number) {
+    const coneLength = 0.0005; // Longitud del cono (en grados, aproximadamente 50 px)
+    const coneWidth = 0.0002; // Ancho del cono
+
+    // Calcular las coordenadas de los vértices del cono
+    const point1 = L.latLng(lat, lng); // Punto de inicio (posición del usuario)
+    const point2 = L.latLng(lat + (coneLength * Math.sin(heading * (Math.PI / 180))), lng + (coneLength * Math.cos(heading * (Math.PI / 180))));
+    const point3 = L.latLng(lat + (coneWidth * Math.sin((heading + 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading + 45) * (Math.PI / 180))));
+    const point4 = L.latLng(lat + (coneWidth * Math.sin((heading - 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading - 45) * (Math.PI / 180))));
+
+    const coneLatLngs = [point1, point2, point3, point2, point4];
+
+    // Crear el cono en el mapa
+    directionCone = L.polygon(coneLatLngs, {
+      color: "#FFD700", // Color amarillo
+      fillColor: "#FFD700", // Color amarillo con opacidad
+      fillOpacity: 0.3, // Opacidad del relleno
+    }).addTo(map);
+  }
+
+  function updateDirectionCone(lat: number, lng: number, heading: number) {
+    // Eliminar el cono de dirección anterior
+    if (directionCone) {
+      map.removeLayer(directionCone);
+    }
+    // Crear un nuevo cono de dirección
+    createDirectionCone(lat, lng, heading);
+  }
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
