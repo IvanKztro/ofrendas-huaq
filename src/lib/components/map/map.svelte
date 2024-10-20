@@ -8,29 +8,47 @@
   let userMarker, directionMarker: any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
+  let loading = true; // Estado de carga
 
-  const lugares = [
-    { nombre: "Lugar 1", descripcion: "Este es el lugar 1.", lat: 18.7710778, lng: -98.5441889 },
-    { nombre: "Lugar 2", descripcion: "Este es el lugar 2.", lat: 18.7709122, lng: -98.5431473 },
-    // Otros lugares...
-  ];
+  // Función para generar ubicaciones aleatorias alrededor de la ubicación del usuario
+  function generateRandomLocations(lat: number, lng: number, numLocations: number, radius: number) {
+    const locations = [];
+
+    for (let i = 0; i < numLocations; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * radius;
+
+      const deltaLat = distance * Math.cos(angle) / 111.32;
+      const deltaLng = distance * Math.sin(angle) / (111.32 * Math.cos(lat * Math.PI / 180));
+
+      const randomLat = lat + deltaLat;
+      const randomLng = lng + deltaLng;
+
+      locations.push({
+        nombre: `Lugar Aleatorio ${i + 1}`,
+        descripcion: `Este es el lugar aleatorio ${i + 1}.`,
+        lat: randomLat,
+        lng: randomLng,
+      });
+    }
+
+    return locations;
+  }
 
   onMount(() => {
-    map = L.map("map").setView([18.770748, -98.542181], 15.55);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-    }).addTo(map);
-
-    lugares.forEach((lugar) => {
-      const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-      marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-    });
+    // Inicializar el mapa pero no establecer la vista aún
+    map = L.map("map");
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         userCoords.lat = position.coords.latitude;
         userCoords.lng = position.coords.longitude;
+
+        // Establecer la vista del mapa en la ubicación del usuario
+        map.setView([userCoords.lat, userCoords.lng], 15.55);
+
+        // Ocultar el indicador de carga cuando la ubicación se obtiene
+        loading = false;
 
         // Añadir marcador de ubicación del usuario (círculo azul)
         userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
@@ -40,20 +58,32 @@
           radius: 10,
         }).addTo(map);
 
-        map.setView([userCoords.lat, userCoords.lng], 15.55);
+        // Cargar las capas de mapa
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
 
-        // Crear ícono personalizado para la orientación (flecha)
-        const userDirectionIcon = L.divIcon({
-          className: "direction-icon",
-          iconSize: [40, 40],
+        // Crear ícono personalizado con una imagen de flecha
+        const userDirectionIcon = L.icon({
+          iconUrl: 'eyearea.png',
+          iconSize: [20, 20],
           iconAnchor: [20, 20],
-          html: '<div class="arrow"></div>', // HTML para la flecha
         });
 
         // Añadir marcador de orientación (flecha)
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userDirectionIcon,
+          rotationAngle: 0,
         }).addTo(map);
+
+        // Generar 7 ubicaciones aleatorias dentro de un radio de 1 km alrededor de la ubicación del usuario
+        const randomLocations = generateRandomLocations(userCoords.lat, userCoords.lng, 7, 1);
+
+        // Agregar las ubicaciones aleatorias al mapa
+        randomLocations.forEach((lugar) => {
+          const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+          marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+        });
       });
 
       if (window.DeviceOrientationEvent) {
@@ -61,11 +91,7 @@
           if (event.alpha) {
             userHeading = event.alpha;
             if (directionMarker) {
-              const arrowElement = document.querySelector(".arrow") as HTMLElement;
-              if (arrowElement) {
-                // Aplica la rotación
-                arrowElement.style.transform = `rotate(${userHeading}deg)`;
-              }
+              directionMarker.setRotationAngle(userHeading);
             }
           }
         });
@@ -76,42 +102,45 @@
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
 
-<div id="map"></div>
+<!-- Mostrar el mensaje de carga mientras se obtiene la ubicación -->
+{#if loading}
+  <div class="loading-indicator">
+    <p class="text-center text-gray-500">Obteniendo tu ubicación...</p>
+  </div>
+{/if}
+
+<!-- Mapa -->
+<div id="map" ></div>
 
 <style>
   #map {
     height: 70vh;
   }
 
-  .arrow {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 20px solid #3388ff; /* Color de la flecha */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform-origin: 50% 100%; /* Rotar desde la base */
-    transform: rotate(0deg); /* Sin rotación inicial */
+  .loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hidden {
+    display: none;
   }
 </style>
 
 
-<!-- 
 
-<script lang="ts">
+<!-- <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
   import "leaflet.markercluster";
-  import "leaflet-rotatedmarker";
+  import "leaflet-rotatedmarker"; // Asegura que esta librería esté correctamente cargada
 
   let map: any;
-  let userMarker, directionMarker:any;
+  let userMarker, directionMarker: any;
   let userCoords = { lat: 0, lng: 0 };
   let userHeading = 0;
 
-  // Lista de lugares con coordenadas y descripción
   const lugares = [
     {
       nombre: "Lugar 1",
@@ -143,66 +172,20 @@
       lat: 18.772281,
       lng: -98.545231,
     },
-    {
-      nombre: "Lugar 6",
-      descripcion: "Este es el lugar 6.",
-      lat: 18.769912,
-      lng: -98.541891,
-    },
-    {
-      nombre: "Lugar 7",
-      descripcion: "Este es el lugar 7.",
-      lat: 18.769321,
-      lng: -98.543701,
-    },
-    {
-      nombre: "Lugar 8",
-      descripcion: "Este es el lugar 8.",
-      lat: 18.772711,
-      lng: -98.546012,
-    },
-    {
-      nombre: "Lugar 9",
-      descripcion: "Este es el lugar 9.",
-      lat: 18.769012,
-      lng: -98.540912,
-    },
-    {
-      nombre: "Lugar 10",
-      descripcion: "Este es el lugar 10.",
-      lat: 18.773112,
-      lng: -98.543451,
-    },
-    {
-      nombre: "Lugar 11",
-      descripcion: "Este es el lugar 11.",
-      lat: 18.772512,
-      lng: -98.544712,
-    },
-    {
-      nombre: "Lugar 12",
-      descripcion: "Este es el lugar 12.",
-      lat: 18.770211,
-      lng: -98.544112,
-    },
   ];
 
   onMount(() => {
-    // Inicializa el mapa centrado en coordenadas iniciales
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
 
-    // Añade las capas de OpenStreetMap
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Muestra las marcas de los lugares
     lugares.forEach((lugar) => {
       const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
       marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
     });
 
-    // Solicitar la ubicación del usuario
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         userCoords.lat = position.coords.latitude;
@@ -218,29 +201,27 @@
 
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Crear ícono personalizado para la orientación (flecha)
-        const userDirectionIcon = L.divIcon({
-          className: "direction-icon", // clase CSS personalizada para la flecha
-          iconSize: [40, 40],
-          iconAnchor: [20, 20],
-          html: '<div class="arrow"></div>', // flecha con CSS
+        // Crear ícono personalizado con una imagen de flecha
+        const userDirectionIcon = L.icon({
+          iconUrl: 'eyearea.png', // Ruta a la imagen de la flecha
+          iconSize: [20, 20], // Tamaño de la imagen
+          iconAnchor: [20, 20], // Ancla para centrar la imagen en el marcador
         });
 
         // Añadir marcador de orientación (flecha)
         directionMarker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userDirectionIcon,
+          rotationAngle: 0, // Inicialmente sin rotación
         }).addTo(map);
       });
 
-      // Detectar la orientación del dispositivo
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", (event) => {
           if (event.alpha) {
             userHeading = event.alpha;
             if (directionMarker) {
-              // Actualiza la rotación de la flecha según la orientación del dispositivo
-              const rotation = `rotate(${userHeading}deg)`;
-              document.querySelector(".arrow").style.transform = rotation;
+              // Rotar la imagen de la flecha según la orientación del dispositivo
+              directionMarker.setRotationAngle(userHeading);
             }
           }
         });
@@ -257,17 +238,6 @@
   #map {
     height: 70vh;
   }
-
-  .direction-icon .arrow {
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 20px solid #3388ff; /* Color de la flecha */
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: 50% 50%; /* Centro de rotación */
-  transform: rotate(0deg); /* Inicialmente sin rotación */
-}
 </style> -->
+
+
