@@ -7,8 +7,7 @@
   let userCoords = { lat: 0, lng: 0 };
   let userArrow: any;
   let loading = true; // Variable para el estado de carga
-  let alpha = 0; // Ángulo de rotación alrededor del eje Z
-  let lastCoords = { lat: 0, lng: 0 }; // Para guardar la última posición
+  let alpha = 0; // Ángulo de rotación alrededor del eje Z (ajustado)
 
   // Generar lugares aleatorios cerca de la ubicación del usuario
   function generateRandomPlaces(lat: number, lng: number, count: number) {
@@ -34,7 +33,6 @@
         (position) => {
           userCoords.lat = position.coords.latitude;
           userCoords.lng = position.coords.longitude;
-          lastCoords = { ...userCoords }; // Guardar la última posición
 
           // Mostrar mapa en la ubicación del usuario
           map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
@@ -51,12 +49,12 @@
             radius: 10,
           }).addTo(map);
 
-          // Añadir flecha que indica dirección
+          // Añadir flecha que indica dirección (usando CSS)
           userArrow = L.marker([userCoords.lat, userCoords.lng], {
             icon: L.divIcon({
               className: "arrow-icon",
-              html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Cambiado a un ícono de cono
-              iconSize: [30, 30],
+              html: `<div class="triangle" style="transform: rotate(${alpha}deg);"></div>`,
+              iconSize: [40, 40],
             }),
           }).addTo(map);
 
@@ -70,7 +68,6 @@
           // Escuchar cambios de ubicación
           navigator.geolocation.watchPosition(
             (pos) => {
-              lastCoords = { ...userCoords }; // Guardar la última posición
               userCoords.lat = pos.coords.latitude;
               userCoords.lng = pos.coords.longitude;
 
@@ -85,8 +82,8 @@
                 userArrow.setLatLng([userCoords.lat, userCoords.lng]);
                 userArrow.setIcon(L.divIcon({
                   className: "arrow-icon",
-                  html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Ícono de cono
-                  iconSize: [30, 30],
+                  html: `<div class="triangle" style="transform: rotate(${-alpha}deg);"></div>`, // Invertir la rotación
+                  iconSize: [40, 40],
                 }));
               }
             },
@@ -111,8 +108,8 @@
         if (userArrow) {
           userArrow.setIcon(L.divIcon({
             className: "arrow-icon",
-            html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Ícono de cono
-            iconSize: [30, 30],
+            html: `<div class="triangle" style="transform: rotate(${-alpha}deg);"></div>`, // Invertir la rotación
+            iconSize: [40, 40],
           }));
         }
       });
@@ -128,8 +125,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
-    color: #3388ff;
+  }
+
+  .triangle {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 40px solid #3388ff; /* El color de la flecha */
   }
 </style>
 
