@@ -5,7 +5,26 @@
   let map: any;
   let userMarker: any;
   let userCoords = { lat: 0, lng: 0 };
+  let userArrow: any;
   let loading = true; // Variable para el estado de carga
+  let lastCoords = { lat: 0, lng: 0 }; // Para guardar la última posición
+
+  // Generar lugares aleatorios cerca de la ubicación del usuario
+  function generateRandomPlaces(lat: number, lng: number, count: number) {
+    const places = [];
+    const quarterKm = 0.0025; // Aproximadamente 1/4 de kilómetro en grados
+    for (let i = 0; i < count; i++) {
+      const randomLat = lat + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en latitud
+      const randomLng = lng + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en longitud
+      places.push({
+        nombre: `Lugar ${i + 1}`,
+        descripcion: `Descripción del lugar ${i + 1}.`,
+        lat: randomLat,
+        lng: randomLng,
+      });
+    }
+    return places;
+  }
 
   onMount(() => {
     // Esperar a que se obtenga la ubicación del usuario
@@ -14,6 +33,7 @@
         (position) => {
           userCoords.lat = position.coords.latitude;
           userCoords.lng = position.coords.longitude;
+          lastCoords = { ...userCoords }; // Guardar la última posición
 
           // Mostrar mapa en la ubicación del usuario
           map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
@@ -30,9 +50,26 @@
             radius: 10,
           }).addTo(map);
 
+          // Añadir flecha que indica dirección
+          userArrow = L.marker([userCoords.lat, userCoords.lng], {
+            icon: L.divIcon({
+              className: "arrow-icon",
+              html: `<div style="transform: rotate(${getAngle()}deg); font-size: 24px;">↑</div>`,
+              iconSize: [30, 30],
+            }),
+          }).addTo(map);
+
+          // Generar lugares cercanos
+          const lugares = generateRandomPlaces(userCoords.lat, userCoords.lng, 5);
+          lugares.forEach((lugar) => {
+            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+            marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+          });
+
           // Escuchar cambios de ubicación
           navigator.geolocation.watchPosition(
             (pos) => {
+              lastCoords = { ...userCoords }; // Guardar la última posición
               userCoords.lat = pos.coords.latitude;
               userCoords.lng = pos.coords.longitude;
 
@@ -40,6 +77,16 @@
               if (userMarker) {
                 userMarker.setLatLng([userCoords.lat, userCoords.lng]);
                 map.setView([userCoords.lat, userCoords.lng], 15.55); // Centrar el mapa en la nueva posición
+              }
+
+              // Actualizar flecha
+              if (userArrow) {
+                userArrow.setLatLng([userCoords.lat, userCoords.lng]);
+                userArrow.setIcon(L.divIcon({
+                  className: "arrow-icon",
+                  html: `<div style="transform: rotate(${getAngle()}deg); font-size: 24px;">↑</div>`,
+                  iconSize: [30, 30],
+                }));
               }
             },
             () => {
@@ -61,7 +108,24 @@
       alert("Geolocalización no es soportada por este navegador.");
     }
   });
+
+  // Calcular el ángulo para la flecha
+  function getAngle() {
+    const latDiff = userCoords.lat - lastCoords.lat;
+    const lngDiff = userCoords.lng - lastCoords.lng;
+    return Math.atan2(latDiff, lngDiff) * (180 / Math.PI); // Convertir radianes a grados
+  }
 </script>
+
+<style>
+  .arrow-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #3388ff;
+  }
+</style>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
 <div class="flex flex-col gap-[2px] my-2">
