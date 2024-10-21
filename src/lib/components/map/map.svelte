@@ -5,29 +5,11 @@
   let map: any;
   let userMarker: any;
   let userCoords = { lat: 0, lng: 0 };
-  let userArrow: any;
-  let loading = true; // Variable para el estado de carga
-  let alpha = 0; // Ángulo de rotación alrededor del eje Z (ajustado)
-
-  // Generar lugares aleatorios cerca de la ubicación del usuario
-  function generateRandomPlaces(lat: number, lng: number, count: number) {
-    const places = [];
-    const quarterKm = 0.0025; // Aproximadamente 1/4 de kilómetro en grados
-    for (let i = 0; i < count; i++) {
-      const randomLat = lat + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en latitud
-      const randomLng = lng + (Math.random() - 0.5) * quarterKm; // Aproximadamente 1/4 km en longitud
-      places.push({
-        nombre: `Lugar ${i + 1}`,
-        descripcion: `Descripción del lugar ${i + 1}.`,
-        lat: randomLat,
-        lng: randomLng,
-      });
-    }
-    return places;
-  }
+  let userCone: any;
+  let loading = true; // Estado de carga
+  let alpha = 0; // Ángulo de rotación alrededor del eje Z
 
   onMount(() => {
-    // Esperar a que se obtenga la ubicación del usuario
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -49,21 +31,14 @@
             radius: 10,
           }).addTo(map);
 
-          // Añadir flecha que indica dirección (usando CSS)
-          userArrow = L.marker([userCoords.lat, userCoords.lng], {
+          // Añadir cono de luz para indicar dirección
+          userCone = L.marker([userCoords.lat, userCoords.lng], {
             icon: L.divIcon({
-              className: "arrow-icon",
-              html: `<div class="triangle" style="transform: rotate(${alpha}deg);"></div>`,
-              iconSize: [40, 40],
+              className: "cone-icon",
+              html: `<div class="cone" style="transform: rotate(${alpha}deg);"></div>`,
+              iconSize: [80, 80],
             }),
           }).addTo(map);
-
-          // Generar lugares cercanos
-          const lugares = generateRandomPlaces(userCoords.lat, userCoords.lng, 5);
-          lugares.forEach((lugar) => {
-            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-            marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-          });
 
           // Escuchar cambios de ubicación
           navigator.geolocation.watchPosition(
@@ -77,13 +52,13 @@
                 map.setView([userCoords.lat, userCoords.lng], 15.55); // Centrar el mapa en la nueva posición
               }
 
-              // Actualizar flecha
-              if (userArrow) {
-                userArrow.setLatLng([userCoords.lat, userCoords.lng]);
-                userArrow.setIcon(L.divIcon({
-                  className: "arrow-icon",
-                  html: `<div class="triangle" style="transform: rotate(${-alpha}deg);"></div>`, // Invertir la rotación
-                  iconSize: [40, 40],
+              // Actualizar la posición del cono
+              if (userCone) {
+                userCone.setLatLng([userCoords.lat, userCoords.lng]);
+                userCone.setIcon(L.divIcon({
+                  className: "cone-icon",
+                  html: `<div class="cone" style="transform: rotate(${-alpha}deg);"></div>`, // Ajuste de la rotación
+                  iconSize: [80, 80],
                 }));
               }
             },
@@ -105,11 +80,11 @@
       // Escuchar cambios de orientación del dispositivo
       window.addEventListener("deviceorientation", (event) => {
         alpha = event.alpha; // Obtener el ángulo Z (giro en sentido horario)
-        if (userArrow) {
-          userArrow.setIcon(L.divIcon({
-            className: "arrow-icon",
-            html: `<div class="triangle" style="transform: rotate(${-alpha}deg);"></div>`, // Invertir la rotación
-            iconSize: [40, 40],
+        if (userCone) {
+          userCone.setIcon(L.divIcon({
+            className: "cone-icon",
+            html: `<div class="cone" style="transform: rotate(${-alpha}deg);"></div>`, // Invertir la rotación
+            iconSize: [80, 80],
           }));
         }
       });
@@ -121,18 +96,20 @@
 </script>
 
 <style>
-  .arrow-icon {
+  .cone-icon {
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
-  .triangle {
+  /* Cono de luz estilo Google Maps */
+  .cone {
     width: 0;
     height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 40px solid #3388ff; /* El color de la flecha */
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-bottom: 80px solid rgba(51, 136, 255, 0.4); /* Color del cono con transparencia */
+    transform-origin: center top; /* Punto de referencia para la rotación */
   }
 </style>
 
