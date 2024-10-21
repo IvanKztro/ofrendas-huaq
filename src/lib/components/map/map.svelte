@@ -245,9 +245,3 @@
   }
 </style>
  -->
-
-<style>
-  #map {
-    height: 70vh;
-  }
-</style>
