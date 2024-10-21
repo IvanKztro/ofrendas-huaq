@@ -28,70 +28,73 @@
     return places;
   }
 
-  onMount(() => {
-    // Esperar a que se obtenga la ubicación del usuario
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          userCoords.lat = position.coords.latitude;
-          userCoords.lng = position.coords.longitude;
+  // Código previo...
 
-          // Mostrar mapa en la ubicación del usuario
-          map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
+onMount(() => {
+  // Esperar a que se obtenga la ubicación del usuario
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userCoords.lat = position.coords.latitude;
+        userCoords.lng = position.coords.longitude;
 
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors",
-          }).addTo(map);
+        // Mostrar mapa en la ubicación del usuario
+        map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
 
-          // Añadir marcador de ubicación del usuario (círculo azul)
-          userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-            color: "#3388ff",
-            fillColor: "#3388ff",
-            fillOpacity: 0.5,
-            radius: 10,
-          }).addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
 
-          // Generar lugares cercanos
-          const lugares = generateRandomPlaces(
-            userCoords.lat,
-            userCoords.lng,
-            5
-          );
+        // Añadir marcador de ubicación del usuario (círculo azul)
+        userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
+          color: "#3388ff",
+          fillColor: "#3388ff",
+          fillOpacity: 0.5,
+          radius: 10,
+        }).addTo(map);
 
-          lugares.forEach((lugar) => {
-            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-            marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+        // Generar lugares cercanos
+        const lugares = generateRandomPlaces(
+          userCoords.lat,
+          userCoords.lng,
+          5
+        );
+
+        lugares.forEach((lugar) => {
+          const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+          marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+        });
+
+        // Verifica si hay orientación de dispositivo
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (event) => {
+            if (event.alpha !== null) { // Verifica si event.alpha tiene un valor válido
+              userHeading = event.alpha;
+              userCoords.h = event.alpha; // Solo actualiza si hay un valor
+              updateDirectionCone(
+                userCoords.lat,
+                userCoords.lng,
+                userHeading
+              ); // Actualiza la dirección
+            }
           });
-
-          // Verifica si hay orientación de dispositivo
-          if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (event) => {
-              console.log("++++++++++++++++++++++");
-              console.log(event);
-              if (event.alpha) {
-                userHeading = event.alpha;
-                userCoords.h = event.alpha;
-                updateDirectionCone(
-                  userCoords.lat,
-                  userCoords.lng,
-                  userHeading
-                ); // Actualiza la dirección
-              }
-            });
-          }
-
-          loading = false; // Termina el estado de carga
-        },
-        () => {
-          loading = false; // Termina el estado de carga en caso de error
-          alert("No se pudo obtener la ubicación del usuario.");
         }
-      );
-    } else {
-      loading = false; // Termina el estado de carga si la geolocalización no está disponible
-      alert("Geolocalización no es soportada por este navegador.");
-    }
-  });
+
+        loading = false; // Termina el estado de carga
+      },
+      () => {
+        loading = false; // Termina el estado de carga en caso de error
+        alert("No se pudo obtener la ubicación del usuario.");
+      }
+    );
+  } else {
+    loading = false; // Termina el estado de carga si la geolocalización no está disponible
+    alert("Geolocalización no es soportada por este navegador.");
+  }
+});
+
+// Código posterior...
+
 
   function createDirectionCone(lat: number, lng: number, heading: number) {
     const coneLength = 10; // Longitud del cono
