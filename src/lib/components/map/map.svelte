@@ -28,73 +28,68 @@
     return places;
   }
 
-  // Código previo...
+  onMount(() => {
+    // Esperar a que se obtenga la ubicación del usuario
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          userCoords.lat = position.coords.latitude;
+          userCoords.lng = position.coords.longitude;
 
-onMount(() => {
-  // Esperar a que se obtenga la ubicación del usuario
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        userCoords.lat = position.coords.latitude;
-        userCoords.lng = position.coords.longitude;
+          // Mostrar mapa en la ubicación del usuario
+          map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Mostrar mapa en la ubicación del usuario
-        map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+          }).addTo(map);
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors",
-        }).addTo(map);
+          // Añadir marcador de ubicación del usuario (círculo azul)
+          userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
+            color: "#3388ff",
+            fillColor: "#3388ff",
+            fillOpacity: 0.5,
+            radius: 10,
+          }).addTo(map);
 
-        // Añadir marcador de ubicación del usuario (círculo azul)
-        userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-          color: "#3388ff",
-          fillColor: "#3388ff",
-          fillOpacity: 0.5,
-          radius: 10,
-        }).addTo(map);
+          // Generar lugares cercanos
+          const lugares = generateRandomPlaces(
+            userCoords.lat,
+            userCoords.lng,
+            5
+          );
 
-        // Generar lugares cercanos
-        const lugares = generateRandomPlaces(
-          userCoords.lat,
-          userCoords.lng,
-          5
-        );
-
-        lugares.forEach((lugar) => {
-          const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-          marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-        });
-
-        // Verifica si hay orientación de dispositivo
-        if (window.DeviceOrientationEvent) {
-          window.addEventListener("deviceorientation", (event) => {
-            if (event.alpha !== null) { // Verifica si event.alpha tiene un valor válido
-              userHeading = event.alpha;
-              userCoords.h = event.alpha; // Solo actualiza si hay un valor
-              updateDirectionCone(
-                userCoords.lat,
-                userCoords.lng,
-                userHeading
-              ); // Actualiza la dirección
-            }
+          lugares.forEach((lugar) => {
+            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+            marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
           });
+
+          // Verifica si hay orientación de dispositivo
+          if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (event) => {
+              if (event.alpha !== null) {
+                userHeading = event.alpha; // Utiliza alpha para la dirección
+                userCoords.h = userHeading;
+                updateDirectionCone(
+                  userCoords.lat,
+                  userCoords.lng,
+                  userHeading
+                ); // Actualiza la dirección
+              }
+            });
+          }
+
+          loading = false; // Termina el estado de carga
+        },
+        () => {
+          loading = false; // Termina el estado de carga en caso de error
+          alert("No se pudo obtener la ubicación del usuario.");
         }
-
-        loading = false; // Termina el estado de carga
-      },
-      () => {
-        loading = false; // Termina el estado de carga en caso de error
-        alert("No se pudo obtener la ubicación del usuario.");
-      }
-    );
-  } else {
-    loading = false; // Termina el estado de carga si la geolocalización no está disponible
-    alert("Geolocalización no es soportada por este navegador.");
-  }
-});
-
-// Código posterior...
-
+      );
+    } else {
+      loading = false; // Termina el estado de carga si la geolocalización no está disponible
+      alert("Geolocalización no es soportada por este navegador.");
+    }
+  });
 
   function createDirectionCone(lat: number, lng: number, heading: number) {
     const coneLength = 10; // Longitud del cono
@@ -116,7 +111,6 @@ onMount(() => {
     );
 
     const coneLatLngs = [point1, point2, point3, point2, point4];
-    console.log(coneLatLngs);
 
     // Crear el cono en el mapa
     directionCone = L.polygon(coneLatLngs, {
@@ -131,12 +125,10 @@ onMount(() => {
     if (directionCone) {
       map.removeLayer(directionCone);
     }
-    console.log(lat);
-    console.log(lng);
-    console.log(heading);
     // Crear un nuevo cono de dirección
     createDirectionCone(lat, lng, heading);
   }
+  
   $: console.log(userCoords);
 </script>
 
@@ -152,7 +144,8 @@ onMount(() => {
   <div class="text-center text-lg">Cargando mapa y lugares...</div>
 {/if}
 
-<div id="map"></div>
+<div id="map" style="height: 500px;"></div>
+
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
