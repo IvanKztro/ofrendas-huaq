@@ -6,7 +6,7 @@
 
   let map: any;
   let userMarker: any;
-  let userCoords = { lat: 0, lng: 0 };
+  let userCoords = { lat: 0, lng: 0, h: 0 };
   let userHeading = 0;
   let directionCone: any; // Variable para el cono de dirección
   let loading = true; // Variable para el estado de carga
@@ -31,48 +31,62 @@
   onMount(() => {
     // Esperar a que se obtenga la ubicación del usuario
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        userCoords.lat = position.coords.latitude;
-        userCoords.lng = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          userCoords.lat = position.coords.latitude;
+          userCoords.lng = position.coords.longitude;
 
-        // Mostrar mapa en la ubicación del usuario
-        map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
+          // Mostrar mapa en la ubicación del usuario
+          map = L.map("map").setView([userCoords.lat, userCoords.lng], 15.55);
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors",
-        }).addTo(map);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+          }).addTo(map);
 
-        // Añadir marcador de ubicación del usuario (círculo azul)
-        userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-          color: "#3388ff",
-          fillColor: "#3388ff",
-          fillOpacity: 0.5,
-          radius: 10,
-        }).addTo(map);
+          // Añadir marcador de ubicación del usuario (círculo azul)
+          userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
+            color: "#3388ff",
+            fillColor: "#3388ff",
+            fillOpacity: 0.5,
+            radius: 10,
+          }).addTo(map);
 
-        // Generar lugares cercanos
-        const lugares = generateRandomPlaces(userCoords.lat, userCoords.lng, 5);
+          // Generar lugares cercanos
+          const lugares = generateRandomPlaces(
+            userCoords.lat,
+            userCoords.lng,
+            5
+          );
 
-        lugares.forEach((lugar) => {
-          const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-          marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-        });
-
-        // Verifica si hay orientación de dispositivo
-        if (window.DeviceOrientationEvent) {
-          window.addEventListener("deviceorientation", (event) => {
-            if (event.alpha) {
-              userHeading = event.alpha;
-              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
-            }
+          lugares.forEach((lugar) => {
+            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+            marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
           });
-        }
 
-        loading = false; // Termina el estado de carga
-      }, () => {
-        loading = false; // Termina el estado de carga en caso de error
-        alert("No se pudo obtener la ubicación del usuario.");
-      });
+          // Verifica si hay orientación de dispositivo
+          if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (event) => {
+              console.log("++++++++++++++++++++++");
+              console.log(event);
+              if (event.alpha) {
+                userHeading = event.alpha;
+                userCoords.h = event.alpha;
+                updateDirectionCone(
+                  userCoords.lat,
+                  userCoords.lng,
+                  userHeading
+                ); // Actualiza la dirección
+              }
+            });
+          }
+
+          loading = false; // Termina el estado de carga
+        },
+        () => {
+          loading = false; // Termina el estado de carga en caso de error
+          alert("No se pudo obtener la ubicación del usuario.");
+        }
+      );
     } else {
       loading = false; // Termina el estado de carga si la geolocalización no está disponible
       alert("Geolocalización no es soportada por este navegador.");
@@ -85,11 +99,21 @@
 
     // Calcular las coordenadas de los vértices del cono
     const point1 = L.latLng(lat, lng); // Punto de inicio (posición del usuario)
-    const point2 = L.latLng(lat + (coneLength * Math.sin(heading * (Math.PI / 180))), lng + (coneLength * Math.cos(heading * (Math.PI / 180))));
-    const point3 = L.latLng(lat + (coneWidth * Math.sin((heading + 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading + 45) * (Math.PI / 180))));
-    const point4 = L.latLng(lat + (coneWidth * Math.sin((heading - 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading - 45) * (Math.PI / 180))));
+    const point2 = L.latLng(
+      lat + coneLength * Math.sin(heading * (Math.PI / 180)),
+      lng + coneLength * Math.cos(heading * (Math.PI / 180))
+    );
+    const point3 = L.latLng(
+      lat + coneWidth * Math.sin((heading + 45) * (Math.PI / 180)),
+      lng + coneWidth * Math.cos((heading + 45) * (Math.PI / 180))
+    );
+    const point4 = L.latLng(
+      lat + coneWidth * Math.sin((heading - 45) * (Math.PI / 180)),
+      lng + coneWidth * Math.cos((heading - 45) * (Math.PI / 180))
+    );
 
     const coneLatLngs = [point1, point2, point3, point2, point4];
+    console.log(coneLatLngs);
 
     // Crear el cono en el mapa
     directionCone = L.polygon(coneLatLngs, {
@@ -104,12 +128,21 @@
     if (directionCone) {
       map.removeLayer(directionCone);
     }
+    console.log(lat);
+    console.log(lng);
+    console.log(heading);
     // Crear un nuevo cono de dirección
     createDirectionCone(lat, lng, heading);
   }
+  $: console.log(userCoords);
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
+<div class="flex flex-col gap-[2px] my-2">
+  <small>lat: {userCoords.lat}</small>
+  <small>lng: {userCoords.lng}</small>
+  <small>h: {userCoords.h}</small>
+</div>
 
 <!-- Mostrar cargando -->
 {#if loading}
@@ -117,15 +150,6 @@
 {/if}
 
 <div id="map"></div>
-
-<style>
-  #map {
-    height: 70vh;
-  }
-</style>
-
-
-
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
@@ -231,3 +255,9 @@
   }
 </style>
  -->
+
+<style>
+  #map {
+    height: 70vh;
+  }
+</style>
