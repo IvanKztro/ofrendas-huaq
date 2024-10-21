@@ -10,7 +10,6 @@
   let userHeading = 0;
   let directionCone: any;
 
-  // Generar lugares aleatorios cerca de la ubicación del usuario
   function generateRandomPlaces(lat: number, lng: number, count: number) {
     const places = [];
     for (let i = 0; i < count; i++) {
@@ -33,73 +32,66 @@
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Si el navegador admite geolocalización
+    // Comprobar si la geolocalización está disponible
     if (navigator.geolocation) {
-      // Actualizar la posición del usuario en tiempo real
+      // Escuchar cambios en la ubicación del usuario en tiempo real
       navigator.geolocation.watchPosition((position) => {
         userCoords.lat = position.coords.latitude;
         userCoords.lng = position.coords.longitude;
 
-        if (!userMarker) {
-          // Crear el marcador inicial
+        // Si ya existe el marcador del usuario, simplemente actualizar la posición
+        if (userMarker) {
+          userMarker.setLatLng([userCoords.lat, userCoords.lng]);
+        } else {
+          // Crear un nuevo marcador si no existe
           userMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
             color: "#3388ff",
             fillColor: "#3388ff",
             fillOpacity: 0.5,
             radius: 10,
           }).addTo(map);
-        } else {
-          // Mover el marcador a la nueva posición
-          userMarker.setLatLng([userCoords.lat, userCoords.lng]);
         }
 
-        // Centrar el mapa en la nueva posición del usuario
+        // Establecer la vista del mapa en la nueva ubicación del usuario
         map.setView([userCoords.lat, userCoords.lng], 15.55);
 
-        // Actualizar el cono de dirección según el heading
-        updateDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+        // Actualizar el cono de dirección si hay orientación disponible
+        if (userHeading) {
+          updateDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+        }
       });
 
-      // Generar lugares cercanos aleatorios
-      const lugares = generateRandomPlaces(userCoords.lat, userCoords.lng, 5);
-      lugares.forEach((lugar) => {
-        const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
-        marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
-      });
-
-      // Escuchar eventos de orientación del dispositivo (giroscopio)
+      // Si el dispositivo tiene soporte para la orientación
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", (event) => {
-          if (event.alpha !== null) {
+          if (event.alpha) {
             userHeading = event.alpha;
             updateDirectionCone(userCoords.lat, userCoords.lng, userHeading);
           }
         });
       }
+
+      // Generar lugares cercanos a la ubicación del usuario
+      const lugares = generateRandomPlaces(userCoords.lat, userCoords.lng, 5);
+      lugares.forEach((lugar) => {
+        const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+        marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
+      });
     }
   });
 
-  // Crear el cono de dirección basado en la orientación
   function createDirectionCone(lat: number, lng: number, heading: number) {
-    const coneLength = 0.01; // Longitud del cono (aproximadamente 1 km)
-    const coneWidth = 0.005; // Ancho del cono (medio km)
+    const coneLength = 10; // Longitud del cono
+    const coneWidth = 6; // Ancho del cono
 
-    const point1 = L.latLng(lat, lng); // Punto inicial (posición del usuario)
-    const point2 = L.latLng(
-      lat + coneLength * Math.sin(heading * (Math.PI / 180)),
-      lng + coneLength * Math.cos(heading * (Math.PI / 180))
-    );
-    const point3 = L.latLng(
-      lat + coneWidth * Math.sin((heading + 45) * (Math.PI / 180)),
-      lng + coneWidth * Math.cos((heading + 45) * (Math.PI / 180))
-    );
-    const point4 = L.latLng(
-      lat + coneWidth * Math.sin((heading - 45) * (Math.PI / 180)),
-      lng + coneWidth * Math.cos((heading - 45) * (Math.PI / 180))
-    );
+    const point1 = L.latLng(lat, lng); // Punto de inicio (posición del usuario)
+    const point2 = L.latLng(lat + (coneLength * Math.sin(heading * (Math.PI / 180))), lng + (coneLength * Math.cos(heading * (Math.PI / 180))));
+    const point3 = L.latLng(lat + (coneWidth * Math.sin((heading + 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading + 45) * (Math.PI / 180))));
+    const point4 = L.latLng(lat + (coneWidth * Math.sin((heading - 45) * (Math.PI / 180))), lng + (coneWidth * Math.cos((heading - 45) * (Math.PI / 180))));
 
     const coneLatLngs = [point1, point2, point3, point2, point4];
 
+    // Crear el cono de dirección
     directionCone = L.polygon(coneLatLngs, {
       color: "#FFD700",
       fillColor: "#FFD700",
@@ -107,13 +99,10 @@
     }).addTo(map);
   }
 
-  // Actualizar el cono de dirección
   function updateDirectionCone(lat: number, lng: number, heading: number) {
-    // Eliminar el cono anterior
     if (directionCone) {
       map.removeLayer(directionCone);
     }
-    // Crear un nuevo cono de dirección
     createDirectionCone(lat, lng, heading);
   }
 </script>
@@ -126,6 +115,14 @@
 </div>
 
 <div id="map"></div>
+
+<style>
+  #map {
+    height: 70vh;
+  }
+</style>
+
+
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
@@ -245,6 +242,8 @@
   }
 </style> -->
 
+
+
 <!-- <script lang="ts">
   import { onMount } from "svelte";
   import L from "leaflet";
@@ -349,9 +348,3 @@
   }
 </style>
  -->
-
-<style>
-  #map {
-    height: 70vh;
-  }
-</style>
