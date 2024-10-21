@@ -63,20 +63,15 @@
             marker.bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}`);
           });
 
-          // Verifica si hay orientación de dispositivo
-          if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (event) => {
-              if (event.alpha !== null) {
-                userHeading = event.alpha; // Utiliza alpha para la dirección
-                userCoords.h = userHeading;
-                updateDirectionCone(
-                  userCoords.lat,
-                  userCoords.lng,
-                  userHeading
-                ); // Actualiza la dirección
-              }
-            });
-          }
+          // Escuchar cambios de orientación
+          window.addEventListener("deviceorientation", (event) => {
+            if (event.beta !== null && event.gamma !== null) {
+              const heading = Math.atan2(event.gamma, event.beta) * (180 / Math.PI);
+              userHeading = heading >= 0 ? heading : 360 + heading; // Convertir a un valor positivo
+              userCoords.h = userHeading; // Actualiza la dirección
+              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading); // Actualiza la dirección
+            }
+          });
 
           loading = false; // Termina el estado de carga
         },
@@ -128,7 +123,7 @@
     // Crear un nuevo cono de dirección
     createDirectionCone(lat, lng, heading);
   }
-  
+
   $: console.log(userCoords);
 </script>
 
