@@ -7,6 +7,7 @@
   let userCoords = { lat: 0, lng: 0 };
   let userArrow: any;
   let loading = true; // Variable para el estado de carga
+  let alpha = 0; // Ángulo de rotación alrededor del eje Z
   let lastCoords = { lat: 0, lng: 0 }; // Para guardar la última posición
 
   // Generar lugares aleatorios cerca de la ubicación del usuario
@@ -54,7 +55,7 @@
           userArrow = L.marker([userCoords.lat, userCoords.lng], {
             icon: L.divIcon({
               className: "arrow-icon",
-              html: `<div style="transform: rotate(${getAngle()}deg); font-size: 24px;">↑</div>`,
+              html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Cambiado a un ícono de cono
               iconSize: [30, 30],
             }),
           }).addTo(map);
@@ -84,7 +85,7 @@
                 userArrow.setLatLng([userCoords.lat, userCoords.lng]);
                 userArrow.setIcon(L.divIcon({
                   className: "arrow-icon",
-                  html: `<div style="transform: rotate(${getAngle()}deg); font-size: 24px;">↑</div>`,
+                  html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Ícono de cono
                   iconSize: [30, 30],
                 }));
               }
@@ -103,18 +104,23 @@
           alert("No se pudo obtener la ubicación del usuario.");
         }
       );
+
+      // Escuchar cambios de orientación del dispositivo
+      window.addEventListener("deviceorientation", (event) => {
+        alpha = event.alpha; // Obtener el ángulo Z (giro en sentido horario)
+        if (userArrow) {
+          userArrow.setIcon(L.divIcon({
+            className: "arrow-icon",
+            html: `<div style="transform: rotate(${alpha}deg); font-size: 24px;">🔺</div>`, // Ícono de cono
+            iconSize: [30, 30],
+          }));
+        }
+      });
     } else {
       loading = false; // Termina el estado de carga si la geolocalización no está disponible
       alert("Geolocalización no es soportada por este navegador.");
     }
   });
-
-  // Calcular el ángulo para la flecha
-  function getAngle() {
-    const latDiff = userCoords.lat - lastCoords.lat;
-    const lngDiff = userCoords.lng - lastCoords.lng;
-    return Math.atan2(latDiff, lngDiff) * (180 / Math.PI); // Convertir radianes a grados
-  }
 </script>
 
 <style>
@@ -139,6 +145,7 @@
 {/if}
 
 <div id="map" style="height: 500px;"></div>
+
 
 
 <!-- <script lang="ts">
