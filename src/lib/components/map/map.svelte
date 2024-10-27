@@ -16,8 +16,8 @@
   let parking: any = [];
   let hotels: any = [];
   let markers: any = [];
-  
-let selectedType = "all";
+
+  let selectedType = "all";
   // Generar lugares aleatorios cerca de la ubicación del usuario (solo se ejecuta una vez)
   // function generateRandomPlaces(lat: number, lng: number, count: number) {
   //   const places = [];
@@ -133,6 +133,27 @@ let selectedType = "all";
 
         map.setView([userCoords.lat, userCoords.lng], 15.55);
         showMarkers(selectedType);
+      });
+
+      // Usar watchPosition para actualizar la posición del usuario sin generar nuevos puntos
+      navigator.geolocation.watchPosition((position) => {
+        userCoords.lat = position.coords.latitude;
+        userCoords.lng = position.coords.longitude;
+
+        // Actualizar la posición del marcador del usuario (círculo azul)
+        if (userMarker) {
+          userMarker.setLatLng([userCoords.lat, userCoords.lng]);
+        }
+
+        // Actualizar el cono de dirección si el dispositivo tiene orientación
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (event) => {
+            if (event.alpha) {
+              userHeading = event.alpha;
+              updateDirectionCone(userCoords.lat, userCoords.lng, userHeading);
+            }
+          });
+        }
       });
     }
   });
