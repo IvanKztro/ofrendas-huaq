@@ -13,6 +13,8 @@
   let parking: any = [];
   let hotels: any = [];
   let markers: any = [];
+  let haserror:string= "";
+  let updated:string= "";
 
   let selectedType = "all";
 
@@ -43,16 +45,31 @@
         showMarkers(selectedType);
       });
 
-      // Usar watchPosition para actualizar la posición del usuario sin generar nuevos puntos
-      navigator.geolocation.watchPosition((position) => {
-        userCoords.lat = position.coords.latitude;
-        userCoords.lng = position.coords.longitude;
+      navigator.geolocation.watchPosition(
+        (position) => {
+          userCoords.lat = position.coords.latitude;
+          userCoords.lng = position.coords.longitude;
 
-        // Actualizar la posición del marcador del usuario (círculo azul)
-        if (userMarker) {
-          userMarker.setLatLng([userCoords.lat, userCoords.lng]);
+          // Actualizar la posición del marcador del usuario (círculo azul)
+          if (userMarker) {
+            userMarker.setLatLng([userCoords.lat, userCoords.lng]);
+            map.panTo([userCoords.lat, userCoords.lng], { animate: true });
+          }
+          updated="doneee"
+          haserror=""
+        },
+        (error) => {
+          updated="none"
+          console.error("Error en la geolocalización:", error);
+          haserror="doneee"
+        },
+        {
+          enableHighAccuracy: true,    // Mejor precisión
+          maximumAge: 0,               // Sin caché de posición
+          timeout: 5000,               // Tiempo máximo para obtener la posición
+          distanceFilter: 1,           // Actualización a partir de 1 metro de cambio
         }
-      });
+      );
     }
   });
 
@@ -83,6 +100,12 @@
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
+<small>lat: {userCoords.lat}</small>
+<small>lng: {userCoords.lng}</small>
+<!-- <br>
+<small>updated: {updated}</small>
+<br>
+<small>error: {haserror}</small> -->
 <div class="my-4 w-full">
   <select
     bind:value={selectedType}
@@ -91,15 +114,20 @@
   >
     <option value="all">Mostrar Todos</option>
     <option value="ofrenda">Ofrendas ({ofrendas?.length || 0})</option>
-    <option value="information"
-      >Información ({informationstate?.length || 0})</option
-    >
+    <option value="information">Información ({informationstate?.length || 0})</option>
     <option value="parking">Estacionamiento ({parking?.length || 0})</option>
     <option value="hotel">Hotel ({hotels?.length || 0})</option>
   </select>
 </div>
 
 <div id="map"></div>
+
+<style>
+  #map {
+    height: 70vh;
+  }
+</style>
+
 
 <!-- <script lang="ts">
   import { onMount } from "svelte";
@@ -273,8 +301,3 @@
 
  -->
 
-<style>
-  #map {
-    height: 70vh;
-  }
-</style>
