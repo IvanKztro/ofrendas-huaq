@@ -13,8 +13,7 @@
   let parking: any = [];
   let hotels: any = [];
   let markers: any = [];
-  let haserror:string= "";
-  let updated:string= "";
+  let autoCenter = true;  // Nueva bandera para controlar el centrado automático
 
   let selectedType = "all";
 
@@ -28,6 +27,11 @@
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
+
+    // Desactivar centrado automático si el usuario interactúa con el mapa
+    map.on("dragstart", () => {
+      autoCenter = false;
+    });
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -53,21 +57,21 @@
           // Actualizar la posición del marcador del usuario (círculo azul)
           if (userMarker) {
             userMarker.setLatLng([userCoords.lat, userCoords.lng]);
-            map.panTo([userCoords.lat, userCoords.lng], { animate: true });
+
+            // Solo centrar el mapa si autoCenter es true
+            if (autoCenter) {
+              map.panTo([userCoords.lat, userCoords.lng], { animate: true });
+            }
           }
-          updated="doneee"
-          haserror=""
         },
         (error) => {
-          updated="none"
           console.error("Error en la geolocalización:", error);
-          haserror="doneee"
         },
         {
-          enableHighAccuracy: true,    // Mejor precisión
-          maximumAge: 0,               // Sin caché de posición
-          timeout: 5000,               // Tiempo máximo para obtener la posición
-          distanceFilter: 1,           // Actualización a partir de 1 metro de cambio
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000,
+          distanceFilter: 1,
         }
       );
     }
@@ -97,15 +101,17 @@
         markers.push(marker);
       });
   };
+
+  // Función para centrar manualmente el mapa en la posición del usuario
+  const centerOnUser = () => {
+    autoCenter = true;
+    if (userMarker) {
+      map.setView([userCoords.lat, userCoords.lng], 15.55);
+    }
+  };
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
-<small>lat: {userCoords.lat}</small>
-<small>lng: {userCoords.lng}</small>
-<!-- <br>
-<small>updated: {updated}</small>
-<br>
-<small>error: {haserror}</small> -->
 <div class="my-4 w-full">
   <select
     bind:value={selectedType}
@@ -118,6 +124,10 @@
     <option value="parking">Estacionamiento ({parking?.length || 0})</option>
     <option value="hotel">Hotel ({hotels?.length || 0})</option>
   </select>
+  <!-- Botón para centrar en la posición del usuario -->
+  <button on:click={centerOnUser} class="ml-4 p-2 bg-blue-500 text-white rounded">
+    Centrar en mi posición
+  </button>
 </div>
 
 <div id="map"></div>
@@ -127,6 +137,7 @@
     height: 70vh;
   }
 </style>
+
 
 
 <!-- <script lang="ts">
