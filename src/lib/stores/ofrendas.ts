@@ -38,7 +38,7 @@ export const locations = writable<any>([
   },
   {
     id: 6,
-    name: "Raquel Tapia Llamas",
+    name: "Catalina Mendoza Marquez",
     lat: 18.7686442,
     lng: -98.5380289,
     type: "ofrenda",
@@ -52,7 +52,7 @@ export const locations = writable<any>([
   },
   {
     id: 8,
-    name: "Mariano Chouillo Olivan",
+    name: "Mariano Chiquillo Olivan",
     lat: 18.7703049,
     lng: -98.5377286,
     type: "ofrenda",
@@ -73,7 +73,7 @@ export const locations = writable<any>([
   },
   {
     id: 11,
-    name: "Rogelio Bautista Poblano",
+    name: "Rogerio Bautista Poblano",
     lat: 18.7660112,
     lng: -98.5403811,
     type: "ofrenda",
@@ -178,7 +178,7 @@ export const locations = writable<any>([
   },
   {
     id: 26,
-    name: "Juliana Carrever Sarmiento",
+    name: "Juana Carvente Sarmiento",
     lat: 18.7752076,
     lng: -98.5501078,
     type: "ofrenda",
@@ -218,7 +218,6 @@ export const locations = writable<any>([
     lng: -98.5415327,
     type: "information",
   },
-  //   18.7698209,-98.5415327
   {
     id: 32,
     name: "Estacionamiento",

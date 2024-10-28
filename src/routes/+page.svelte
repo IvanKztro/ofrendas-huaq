@@ -3,10 +3,17 @@
 </script>
 
 <svelte:head>
-  <title>Mapa con Lugares</title>
+  <title>Mapa con Ofrendas</title>
   <meta name="description" content="Mapa con marcas y ubicación del usuario" />
 </svelte:head>
 
-<div>
+<div class="">
   <Map></Map>
+  <!-- <div class="h-5 bg-white  -mt-4 divclass relative"></div> -->
 </div>
+
+<style>
+  .divclass{
+    z-index: 9999;
+  }
+</style>
