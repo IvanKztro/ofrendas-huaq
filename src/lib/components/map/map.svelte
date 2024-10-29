@@ -13,22 +13,24 @@
   let parking: any = [];
   let hotels: any = [];
   let markers: any = [];
-  let autoCenter = true;  // Nueva bandera para controlar el centrado automático
-
+  let autoCenter = true;
   let selectedType = "all";
+  let isLoading = true; // Bandera de carga
 
   onMount(() => {
     ofrendas = $locations.filter((ll) => ll.type === "ofrenda");
     informationstate = $locations.filter((ll) => ll.type === "information");
     parking = $locations.filter((ll) => ll.type === "parking");
     hotels = $locations.filter((ll) => ll.type === "hotel");
+
+    // Inicializar el mapa pero aún no mostrarlo
     map = L.map("map").setView([18.770748, -98.542181], 15.55);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    // Desactivar centrado automático si el usuario interactúa con el mapa
     map.on("dragstart", () => {
       autoCenter = false;
     });
@@ -47,6 +49,7 @@
 
         map.setView([userCoords.lat, userCoords.lng], 15.55);
         showMarkers(selectedType);
+        isLoading = false; // Ocultar el loading una vez que se cargan los marcadores
       });
 
       navigator.geolocation.watchPosition(
@@ -54,11 +57,9 @@
           userCoords.lat = position.coords.latitude;
           userCoords.lng = position.coords.longitude;
 
-          // Actualizar la posición del marcador del usuario (círculo azul)
           if (userMarker) {
             userMarker.setLatLng([userCoords.lat, userCoords.lng]);
 
-            // Solo centrar el mapa si autoCenter es true
             if (autoCenter) {
               map.panTo([userCoords.lat, userCoords.lng], { animate: true });
             }
@@ -77,7 +78,6 @@
     }
   });
 
-  // Función para obtener el icono de acuerdo al tipo
   const getIconForLocation = (type) => {
     return L.icon({
       iconUrl: type === "ofrenda" ? "/ofrenda.gif" : `/${type}.png`,
@@ -86,7 +86,6 @@
     });
   };
 
-  // Función para mostrar los marcadores filtrados
   const showMarkers = (type) => {
     markers.forEach((marker) => marker.remove());
     markers = [];
@@ -102,7 +101,6 @@
       });
   };
 
-  // Función para centrar manualmente el mapa en la posición del usuario
   const centerOnUser = () => {
     autoCenter = true;
     if (userMarker) {
@@ -112,32 +110,44 @@
 </script>
 
 <h3 class="text-center text-blue-500 text-2xl">Ofrendas Huaquechula</h3>
-<div class="my-4 w-full">
-  <select
-    bind:value={selectedType}
-    on:change={() => showMarkers(selectedType)}
-    class="p-2 rounded-lg border border-gray-300"
-  >
-    <option value="all">Todos</option>
-    <option value="ofrenda">Ofrendas ({ofrendas?.length || 0})</option>
-    <option value="information">Información ({informationstate?.length || 0})</option>
-    <option value="parking">Estacionamiento ({parking?.length || 0})</option>
-    <option value="hotel">Hotel ({hotels?.length || 0})</option>
-  </select>
-  <!-- Botón para centrar en la posición del usuario -->
-  <!-- <button on:click={centerOnUser} class="ml-4 p-2 bg-blue-500 text-white rounded">
-    Centrar en mi posición
-  </button> -->
-</div>
-
-<div id="map"></div>
-
+{#if isLoading}
+  <div class="loading-spinner">
+    <p>Cargando mapa y ubicaciones...</p>
+    <!-- Puedes usar una animación de carga aquí -->
+  </div>
+{:else}
+  <div class="my-4 w-full flex gap-2 items-center">
+    <select
+      bind:value={selectedType}
+      on:change={() => showMarkers(selectedType)}
+      class="p-2 rounded-lg border border-gray-300"
+    >
+      <option value="all">Todos</option>
+      <option value="ofrenda">Ofrendas ({ofrendas?.length || 0})</option>
+      <option value="information"
+        >Información ({informationstate?.length || 0})</option
+      >
+      <option value="parking">Estacionamiento ({parking?.length || 0})</option>
+      <option value="hotel">Hotel ({hotels?.length || 0})</option>
+    </select>
+    <button on:click={centerOnUser} class="ml-4 p-2 bg-blue-500 text-white rounded">
+      <!-- Icono de centrar posición -->
+    </button>
+  </div>
+  <div id="map"></div>
+{/if}
 
 <style>
   #map {
     height: 70vh;
   }
+
+  .loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    font-size: 1.5rem;
+    color: #333;
+  }
 </style>
-
-
-
