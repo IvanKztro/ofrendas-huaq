@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Map from "$lib/components/map/map.svelte";
+  import Footer from "$lib/components/footer.svelte";
+import Map from "$lib/components/map/map.svelte";
 </script>
 
 <svelte:head>
@@ -7,7 +8,7 @@
   <meta name="description" content="Mapa con marcas y ubicación del usuario" />
 </svelte:head>
 
-<div class="">
+<div class="container mx-auto px-2 md:px-5">
   <Map></Map>
   <!-- <div class="h-5 bg-white  -mt-4 divclass relative"></div> -->
 </div>

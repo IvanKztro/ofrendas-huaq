@@ -1,17 +1,19 @@
 <script>
+  import Footer from "$lib/components/footer.svelte";
   import "../app.css";
 </script>
 
-<div class="app bg-slate-300">
+<!-- <div class="app bg-slate-300">
   <main>
     <slot />
   </main>
+</div> -->
 
-  <!-- <footer>
-    <p>
-      visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit
-    </p>
-  </footer> -->
+<div class=" min-h-screen app bg-slate-300">
+  <slot />
+  <div class="fixed bottom-0 w-full z-50">
+    <Footer className="" />
+  </div>
 </div>
 
 <style>

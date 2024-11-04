@@ -115,7 +115,7 @@
   };
 </script>
 
-<h3 class="text-center text-black text-2xl">Ofrendas Huaquechula</h3>
+<h3 class="text-center text-black text-2xl">Ofrendas</h3>
 
 <!-- Loading indicator -->
 {#if isLoading}
